@@ -2,3 +2,87 @@ https://github.com/perryvegehan/Packet_analyzer
 
 
 https://beyond-the-brackets.notion.site/JavaScript-Interview-Prep-Top-20-Concepts-Practical-2f204a7327608035bf8fd65be93d8f6a?fbclid=PAT01DUARnha5leHRuA2FlbQIxMABzcnRjBmFwcF9pZA81NjcwNjczNDMzNTI0MjcAAad6EHKwa4nCEsx-5V8DvxzpXqBzISNM63tv14pKWfAVeAk0vd7-9t4HwbTLmA_aem_MsDhBE5dFiz2tLjB1RIOdg
+
+
+IF OBJECT_ID('dbo.TestData', 'U') IS NOT NULL
+    DROP TABLE dbo.TestData;
+
+CREATE TABLE TestData
+(
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    Value DECIMAL(10,2)
+);
+
+WITH Numbers AS
+(
+    SELECT TOP (1000)
+           ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS N
+    FROM sys.objects a
+    CROSS JOIN sys.objects b
+)
+INSERT INTO TestData(Value)
+SELECT 1.00
+FROM Numbers;
+
+DECLARE @Remaining DECIMAL(10,2) = 1000.00;
+DECLARE @Id INT;
+DECLARE @Add DECIMAL(10,2);
+DECLARE @CurrentValue DECIMAL(10,2);
+
+WHILE @Remaining > 0
+BEGIN
+    SELECT TOP 1
+        @Id = Id,
+        @CurrentValue = Value
+    FROM TestData
+    WHERE Value < 3.00
+    ORDER BY NEWID();
+
+    SET @Add = ROUND(RAND() * 2.00, 2);
+
+    IF @Add > @Remaining
+        SET @Add = @Remaining;
+
+    IF @CurrentValue + @Add > 3.00
+        SET @Add = 3.00 - @CurrentValue;
+
+    UPDATE TestData
+    SET Value = Value + @Add
+    WHERE Id = @Id;
+
+    SET @Remaining = @Remaining - @Add;
+END
+
+
+
+SELECT *
+FROM TestData
+ORDER BY Id;
+
+ALTER TABLE TestData
+ADD OutputValue DECIMAL(10,2),
+    Gain DECIMAL(10,2);
+
+UPDATE TestData
+SET
+OutputValue = ROUND(
+        Value * (0.70 + RAND(CHECKSUM(NEWID())) * 0.10),
+        2
+    );
+
+UPDATE TestData
+SET Gain = ROUND((OutputValue / Value) * 100, 2);
+
+	SELECT
+    COUNT(*) AS TotalRows,
+    MIN(Value) AS MinValue,
+    MAX(Value) AS MaxValue,
+    SUM(Value) AS TotalSum,
+	sum(OutputValue) as Output
+
+FROM TestData;
+
+
+SELECT *
+FROM TestData
+ORDER BY Id;
